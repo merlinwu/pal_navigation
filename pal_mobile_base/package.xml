@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<package>
+  <name>pal_mobile_base</name>
+  <version>0.1.0</version>
+  <description>Defines control policies for mobile bases. This package
+    can be seen as a big multiplexer for velocity commands.</description>
+  <maintainer email="Fernandez@todo.todo">Enrique Fernandez</maintainer>
+  <license>BSD</license>
+  <author >Enrique Fernandez</author>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+</package>
