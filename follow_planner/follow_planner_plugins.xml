@@ -1,0 +1,7 @@
+<library path="lib/libfollow_planner">
+  <class name="follow_planner/FollowPlanner" type="follow_planner::FollowPlanner" base_class_type="nav_core::BaseGlobalPlanner">
+    <description>
+      A simple pose follower. Will output a straight path to a given pose.
+    </description>
+  </class>
+</library>
