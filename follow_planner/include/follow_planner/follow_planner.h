@@ -41,22 +41,25 @@
 #ifndef FOLLOW_PLANNER_H
 #define FOLLOW_PLANNER_H
 
-#include <ros/ros.h>
-#include <costmap_2d/costmap_2d.h>
-#include <geometry_msgs/PoseStamped.h>
-#include <geometry_msgs/Point.h>
-#include <nav_msgs/Path.h>
-#include <tf/transform_datatypes.h>
-#include <vector>
 #include <nav_core/base_global_planner.h>
-#include <nav_msgs/GetPlan.h>
+#include <geometry_msgs/PoseStamped.h>
+#include <ros/ros.h>
+#include <vector>
+
+// forward declarations
+namespace costmap_2d
+{
+  class Costmap2D;
+  class Costmap2DROS;
+}
 
 namespace follow_planner
 {
 
 /**
  * @class PlannerCore
- * @brief Provides a ROS wrapper for the global_planner planner which runs a fast, interpolated navigation function on a costmap.
+ * @brief Provides a ROS wrapper for the follow_planner planner which runs a
+ *        very dumb goal follower.
  */
 
 class FollowPlanner : public nav_core::BaseGlobalPlanner
@@ -71,7 +74,7 @@ public:
   /**
    * @brief  Constructor for the PlannerCore object
    * @param  name The name of this planner
-   * @param  costmap A pointer to the costmap to use
+   * @param  costmap A pointer to the costmap to use (ignored)
    * @param  frame_id Frame of the costmap
    */
   FollowPlanner(std::string name, costmap_2d::Costmap2D* costmap, std::string frame_id);
@@ -79,7 +82,8 @@ public:
   /**
    * @brief  Initialization function for the PlannerCore object
    * @param  name The name of this planner
-   * @param  costmap_ros A pointer to the ROS wrapper of the costmap to use for planning
+   * @param  costmap_ros A pointer to the ROS wrapper of the costmap to use
+   *                     for planning (ignored)
    */
   void initialize(std::string name, costmap_2d::Costmap2DROS* costmap_ros);
 
@@ -88,7 +92,7 @@ public:
   /**
    * @brief Given a goal pose in the world, compute a plan
    * @param start The start pose
-   * @param goal The goal pose
+   * @param goal The goal pose (ignored)
    * @param plan The plan... filled by the planner
    * @return True if a valid plan was found, false otherwise
    */
@@ -98,56 +102,15 @@ public:
   /**
    * @brief Given a goal pose in the world, compute a plan
    * @param start The start pose
-   * @param goal The goal pose
+   * @param goal The goal pose (ignored)
    * @param tolerance The tolerance on the goal point for the planner
    * @param plan The plan... filled by the planner
    * @return True if a valid plan was found, false otherwise
    */
-  bool makePlan(const geometry_msgs::PoseStamped& start, const geometry_msgs::PoseStamped& goal, double tolerance,
+  bool makePlan(const geometry_msgs::PoseStamped& start,
+                const geometry_msgs::PoseStamped& goal,
+                double tolerance,
                 std::vector<geometry_msgs::PoseStamped>& plan);
-
-  /**
-   * @brief  Computes the full navigation function for the map given a point in the world to start from
-   * @param world_point The point to use for seeding the navigation function
-   * @return True if the navigation function was computed successfully, false otherwise
-   */
-  bool computePotential(const geometry_msgs::Point& world_point);
-
-  /**
-   * @brief Compute a plan to a goal after the potential for a start point has already been computed (Note: You should call computePotential first)
-   * @param start_x
-   * @param start_y
-   * @param end_x
-   * @param end_y
-   * @param goal The goal pose to create a plan to
-   * @param plan The plan... filled by the planner
-   * @return True if a valid plan was found, false otherwise
-   */
-  bool getPlanFromPotential(double start_x, double start_y, double end_x, double end_y,
-                            const geometry_msgs::PoseStamped& goal,
-                            std::vector<geometry_msgs::PoseStamped>& plan);
-
-  /**
-   * @brief Get the potential, or naviagation cost, at a given point in the world (Note: You should call computePotential first)
-   * @param world_point The point to get the potential for
-   * @return The navigation function's value at that point in the world
-   */
-  double getPointPotential(const geometry_msgs::Point& world_point);
-
-  /**
-   * @brief Check for a valid potential value at a given point in the world (Note: You should call computePotential first)
-   * @param world_point The point to get the potential for
-   * @return True if the navigation function is valid at that point in the world, false otherwise
-   */
-  bool validPointPotential(const geometry_msgs::Point& world_point);
-
-  /**
-   * @brief Check for a valid potential value at a given point in the world (Note: You should call computePotential first)
-   * @param world_point The point to get the potential for
-   * @param tolerance The tolerance on searching around the world_point specified
-   * @return True if the navigation function is valid at that point in the world, false otherwise
-   */
-  bool validPointPotential(const geometry_msgs::Point& world_point, double tolerance);
 
   /**
    * @brief  Publish a path for visualization purposes
@@ -167,10 +130,9 @@ private:
 
   void followCb(const geometry_msgs::PoseStamped& pose);
 
-  double planner_window_x_, planner_window_y_, default_tolerance_;
+  double default_tolerance_;
   std::string tf_prefix_;
   boost::mutex mutex_;
-  unsigned int start_x_, start_y_, end_x_, end_y_;
 
   ros::Subscriber follow_sub_; /// will listen to a PoseStamped and follow it
   geometry_msgs::PoseStamped last_follow_pose_;

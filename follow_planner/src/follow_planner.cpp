@@ -41,9 +41,9 @@
 #include "follow_planner/follow_planner.h"
 
 #include <pluginlib/class_list_macros.h>
-#include <tf/transform_listener.h>
 #include <costmap_2d/cost_values.h>
 #include <costmap_2d/costmap_2d.h>
+#include <nav_msgs/Path.h>
 
 //register this planner as a BaseFollowPlanner plugin
 PLUGINLIB_EXPORT_CLASS(follow_planner::FollowPlanner, nav_core::BaseGlobalPlanner)
@@ -51,18 +51,19 @@ PLUGINLIB_EXPORT_CLASS(follow_planner::FollowPlanner, nav_core::BaseGlobalPlanne
 namespace
 {
 
-  void makeStraightPath(const geometry_msgs::PoseStamped& start,
-                        const geometry_msgs::PoseStamped& goal,
-                        std::vector<geometry_msgs::PoseStamped>& plan)
-  {
+void makeStraightPath(const geometry_msgs::PoseStamped& start,
+                      const geometry_msgs::PoseStamped& goal,
+                      std::vector<geometry_msgs::PoseStamped>& plan)
+{
     // TODO: check timestamp of the goal
 
     // simplest thing ever
     plan.clear();
     plan.push_back(start);
     plan.push_back(goal);
-  }
 }
+
+} // unnamed namnespace
 
 namespace follow_planner
 {
