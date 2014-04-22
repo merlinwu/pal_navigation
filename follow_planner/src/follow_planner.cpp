@@ -80,6 +80,9 @@ void FollowPlanner::initialize(std::string name,
     ros::NodeHandle private_nh("~/" + name);
     frame_id_ = frame_id;
 
+    ros::NodeHandle move_base_nh;
+    follow_sub_ = move_base_nh.subscribe("follow_goal", 100, &FollowPlanner::followCb, this);
+
     private_nh.param("default_tolerance", default_tolerance_, 0.0);
 
     //get the tf prefix
@@ -92,6 +95,11 @@ void FollowPlanner::initialize(std::string name,
   {
     ROS_WARN("This planner has already been initialized, you can't call it twice, doing nothing");
   }
+}
+
+void FollowPlanner::followCb(const geometry_msgs::PoseStamped& pose)
+{
+  last_follow_pose_ = pose;
 }
 
 bool FollowPlanner::makePlan(const geometry_msgs::PoseStamped& start,
@@ -107,10 +115,11 @@ bool FollowPlanner::makePlan(const geometry_msgs::PoseStamped& start,
                              std::vector<geometry_msgs::PoseStamped>& plan)
 {
     boost::mutex::scoped_lock lock(mutex_);
-    if (!initialized_) {
-        ROS_ERROR(
-                "This planner has not been initialized yet, but it is being used, please call initialize() before use");
-        return false;
+    if (!initialized_)
+    {
+      ROS_ERROR("This planner has not been initialized yet, but it is being "
+                "used, please call initialize() before use");
+      return false;
     }
 
     //clear the plan, just in case
@@ -119,16 +128,23 @@ bool FollowPlanner::makePlan(const geometry_msgs::PoseStamped& start,
     ros::NodeHandle n;
     std::string global_frame = frame_id_;
 
-    //until tf can handle transforming things that are way in the past... we'll require the goal to be in our global frame
-    if (tf::resolve(tf_prefix_, goal.header.frame_id) != tf::resolve(tf_prefix_, global_frame)) {
-        ROS_ERROR(
-                "The goal pose passed to this planner must be in the %s frame.  It is instead in the %s frame.", tf::resolve(tf_prefix_, global_frame).c_str(), tf::resolve(tf_prefix_, goal.header.frame_id).c_str());
+    // until tf can handle transforming things that are way in the past...
+    // we'll require the goal to be in our global frame
+    if (tf::resolve(tf_prefix_, goal.header.frame_id) != tf::resolve(tf_prefix_, global_frame))
+    {
+        ROS_ERROR("The goal pose passed to this planner must be in the "
+                  "%s frame.  It is instead in the %s frame.",
+                  tf::resolve(tf_prefix_, global_frame).c_str(),
+                  tf::resolve(tf_prefix_, goal.header.frame_id).c_str());
         return false;
     }
 
-    if (tf::resolve(tf_prefix_, start.header.frame_id) != tf::resolve(tf_prefix_, global_frame)) {
-        ROS_ERROR(
-                "The start pose passed to this planner must be in the %s frame.  It is instead in the %s frame.", tf::resolve(tf_prefix_, global_frame).c_str(), tf::resolve(tf_prefix_, start.header.frame_id).c_str());
+    if (tf::resolve(tf_prefix_, start.header.frame_id) != tf::resolve(tf_prefix_, global_frame))
+    {
+        ROS_ERROR("The start pose passed to this planner must be in the "
+                  "%s frame.  It is instead in the %s frame.",
+                  tf::resolve(tf_prefix_, global_frame).c_str(),
+                  tf::resolve(tf_prefix_, start.header.frame_id).c_str());
         return false;
     }
 
@@ -166,28 +182,32 @@ bool FollowPlanner::makePlan(const geometry_msgs::PoseStamped& start,
     return !plan.empty();
 }
 
-void FollowPlanner::publishPlan(const std::vector<geometry_msgs::PoseStamped>& path) {
-    if (!initialized_) {
-        ROS_ERROR(
-                "This planner has not been initialized yet, but it is being used, please call initialize() before use");
-        return;
-    }
+void FollowPlanner::publishPlan(const std::vector<geometry_msgs::PoseStamped>& path)
+{
+  if (!initialized_)
+  {
+    ROS_ERROR("This planner has not been initialized yet, but it is being "
+              "used, please call initialize() before use");
+    return;
+  }
 
-    //create a message for the plan
-    nav_msgs::Path gui_path;
-    gui_path.poses.resize(path.size());
+  //create a message for the plan
+  nav_msgs::Path gui_path;
+  gui_path.poses.resize(path.size());
 
-    if (!path.empty()) {
-        gui_path.header.frame_id = path[0].header.frame_id;
-        gui_path.header.stamp = path[0].header.stamp;
-    }
+  if (!path.empty())
+  {
+    gui_path.header.frame_id = path[0].header.frame_id;
+    gui_path.header.stamp = path[0].header.stamp;
+  }
 
-    // Extract the plan in world co-ordinates, we assume the path is all in the same frame
-    for (unsigned int i = 0; i < path.size(); i++) {
-        gui_path.poses[i] = path[i];
-    }
+  // Extract the plan in world co-ordinates, we assume the path is all in the same frame
+  for (unsigned int i = 0; i < path.size(); i++)
+  {
+    gui_path.poses[i] = path[i];
+  }
 
-    plan_pub_.publish(gui_path);
+  plan_pub_.publish(gui_path);
 }
 
 } //end namespace follow_planner

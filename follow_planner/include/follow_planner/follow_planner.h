@@ -165,7 +165,7 @@ protected:
 
 private:
 
-  void followCb(const geometry_msgs::PoseStampedConstPtr& pose);
+  void followCb(const geometry_msgs::PoseStamped& pose);
 
   double planner_window_x_, planner_window_y_, default_tolerance_;
   std::string tf_prefix_;
