@@ -97,10 +97,13 @@ void FollowPlanner::initialize(std::string name,
     ros::NodeHandle private_nh("~/" + name);
     frame_id_ = frame_id;
 
-    ros::NodeHandle move_base_nh;
+    ros::NodeHandle move_base_nh("~");
     follow_sub_ = move_base_nh.subscribe("follow_goal", 100, &FollowPlanner::followCb, this);
 
     private_nh.param("default_tolerance", default_tolerance_, 0.0);
+
+
+    plan_pub_ = private_nh.advertise<nav_msgs::Path>("plan", 10);
 
     //get the tf prefix
     ros::NodeHandle prefix_nh;
