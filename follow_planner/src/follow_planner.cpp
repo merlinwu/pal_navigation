@@ -48,7 +48,24 @@
 //register this planner as a BaseFollowPlanner plugin
 PLUGINLIB_EXPORT_CLASS(follow_planner::FollowPlanner, nav_core::BaseGlobalPlanner)
 
-namespace follow_planner {
+namespace
+{
+
+  void makeStraightPath(const geometry_msgs::PoseStamped& start,
+                        const geometry_msgs::PoseStamped& goal,
+                        std::vector<geometry_msgs::PoseStamped>& plan)
+  {
+    // TODO: check timestamp of the goal
+
+    // simplest thing ever
+    plan.clear();
+    plan.push_back(start);
+    plan.push_back(goal);
+  }
+}
+
+namespace follow_planner
+{
 
 FollowPlanner::FollowPlanner()
   : initialized_(false)
@@ -128,17 +145,6 @@ bool FollowPlanner::makePlan(const geometry_msgs::PoseStamped& start,
     ros::NodeHandle n;
     std::string global_frame = frame_id_;
 
-    // until tf can handle transforming things that are way in the past...
-    // we'll require the goal to be in our global frame
-    if (tf::resolve(tf_prefix_, goal.header.frame_id) != tf::resolve(tf_prefix_, global_frame))
-    {
-        ROS_ERROR("The goal pose passed to this planner must be in the "
-                  "%s frame.  It is instead in the %s frame.",
-                  tf::resolve(tf_prefix_, global_frame).c_str(),
-                  tf::resolve(tf_prefix_, goal.header.frame_id).c_str());
-        return false;
-    }
-
     if (tf::resolve(tf_prefix_, start.header.frame_id) != tf::resolve(tf_prefix_, global_frame))
     {
         ROS_ERROR("The start pose passed to this planner must be in the "
@@ -148,34 +154,8 @@ bool FollowPlanner::makePlan(const geometry_msgs::PoseStamped& start,
         return false;
     }
 
-    double wx = start.pose.position.x;
-    double wy = start.pose.position.y;
-
-    unsigned int start_x_i, start_y_i, goal_x_i, goal_y_i;
-    double start_x, start_y, goal_x, goal_y;
-
-
-    //clear the starting cell within the costmap because we know it can't be an obstacle
-    tf::Stamped<tf::Pose> start_pose;
-    tf::poseStampedMsgToTF(start, start_pose);
-    //
-    //make sure to resize the underlying array that Navfn uses
-
-    // TODO: change
-    bool found_legal = true;
-    if (found_legal) {
-        //extract the plan
-        if (getPlanFromPotential(start_x, start_y, goal_x, goal_y, goal, plan)) {
-            //make sure the goal we push on has the same timestamp as the rest of the plan
-            geometry_msgs::PoseStamped goal_copy = goal;
-            goal_copy.header.stamp = ros::Time::now();
-            //plan.push_back(goal_copy);
-        } else {
-            ROS_ERROR("Failed to get a plan from potential when a legal potential was found. This shouldn't happen.");
-        }
-    }else{
-        ROS_ERROR("Failed to get a plan.");
-    }
+    //make plan from start and goal
+    makeStraightPath(start, last_follow_pose_, plan);
 
     //publish the plan for visualization purposes
     publishPlan(plan);
