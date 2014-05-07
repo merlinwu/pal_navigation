@@ -158,6 +158,12 @@ bool FollowPlanner::makePlan(const geometry_msgs::PoseStamped& start,
         return false;
     }
 
+    if (last_follow_pose_.header.frame_id == "")
+    {
+      ROS_ERROR("Follow planner never received a goal to follow, or its frame_id was empty");
+      return false;
+    }
+
     //make plan from start and goal
     makeStraightPath(start, last_follow_pose_, plan);
 
