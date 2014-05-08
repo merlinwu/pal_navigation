@@ -100,6 +100,6 @@ class FollowMe:
         pose.pose.orientation.w = 1.0
         self.al_client.send_goal(MoveBaseGoal(pose), done_cb=self._move_base_cb)
 
-    def _move_base_cb(self):
+    def _move_base_cb(self, status, result):
         if self.started:
             self._send_dummy_goal()
